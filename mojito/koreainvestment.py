@@ -14,6 +14,7 @@ import pandas as pd
 import websockets
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
+import time
 
 EXCHANGE_CODE = {
     "홍콩": "HKS",
@@ -563,6 +564,7 @@ class KoreaInvestment:
 
             # request 1minute ohlcv
             output = self._fetch_today_1m_ohlcv(symbol, to)
+            
             output2 = output['output2']
             last_hour = output2[-1]['stck_cntg_hour']
 
@@ -596,6 +598,16 @@ class KoreaInvestment:
             "fid_pw_data_incu_yn": "Y"
         }
         res = requests.get(url, headers=headers, params=params)
+
+        result = res.json()
+        
+        # do not return if there is an error
+        while result['rt_cd'] == '1':
+            # sleep for 0.1 seconds
+            time.sleep(0.1)
+            res = requests.get(url, headers=headers, params=params)
+            result = res.json()
+        
         return res.json()
 
     def fetch_ohlcv(self, symbol: str, timeframe: str = 'D', start_day:str="", end_day:str="",
@@ -1354,9 +1366,8 @@ class KoreaInvestment:
 
         tr_id = None
         if self.mock:
-            # 모의투자
             if self.exchange in ["나스닥", "뉴욕", "아멕스"]:
-                tr_id = "VTTT1002U" if side == "buy" else "VTTT1001U"
+                tr_id = "VTTT1002U" if side == "buy" else "VTTT1002U"
             elif self.exchange == '도쿄':
                 tr_id = "VTTS0308U" if side == "buy" else "VTTS0307U"
             elif self.exchange == '상해':
@@ -1368,7 +1379,6 @@ class KoreaInvestment:
             else:
                 tr_id = "VTTS0311U" if side == "buy" else "VTTS0310U"
         else:
-            # 실전투자
             if self.exchange in ["나스닥", "뉴욕", "아멕스"]:
                 tr_id = "JTTT1002U" if side == "buy" else "JTTT1006U"
             elif self.exchange == '도쿄':
