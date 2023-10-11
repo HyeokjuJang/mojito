@@ -170,7 +170,7 @@ class KoreaInvestmentWS(Process):
     """WebSocket
     """
     def __init__(self, api_key: str, api_secret: str, tr_id_list: list,
-                 tr_key_list: list, user_id: str = None):
+                 tr_key_list: list, user_id: str = None, mock: bool = False):
         """_summary_
         Args:
             api_key (str): _description_
@@ -189,6 +189,7 @@ class KoreaInvestmentWS(Process):
         self.aes_iv = None
         self.queue = Queue()
         self.base_url = "https://openapi.koreainvestment.com:9443"
+        self.mock = mock
 
     def run(self):
         """_summary_
@@ -198,7 +199,10 @@ class KoreaInvestmentWS(Process):
     async def ws_client(self):
         """_summary_
         """
-        uri = "ws://ops.koreainvestment.com:21000"
+        if self.mock == False:
+            uri = "ws://ops.koreainvestment.com:21000"
+        else:
+            uri = "ws://ops.koreainvestment.com:31000"
 
         approval_key = self.get_approval()
 
