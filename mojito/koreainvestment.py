@@ -608,7 +608,7 @@ class KoreaInvestment:
         # do not return if there is an error
         while result['rt_cd'] == '1':
             # sleep for 0.1 seconds
-            time.sleep(0.1)
+            time.sleep(0.2)
             res = requests.get(url, headers=headers, params=params)
             result = res.json()
         
@@ -630,6 +630,7 @@ class KoreaInvestment:
             resp = self.fetch_ohlcv_domestic(symbol, timeframe, start_day, end_day, adj_price)
         else:
             resp = self.fetch_ohlcv_overesea(symbol, timeframe, end_day, adj_price)
+
         return resp
 
     def fetch_ohlcv_recent30(self, symbol: str, timeframe: str = 'D', adj_price: bool = True) -> dict:
@@ -1371,7 +1372,7 @@ class KoreaInvestment:
         tr_id = None
         if self.mock:
             if self.exchange in ["나스닥", "뉴욕", "아멕스"]:
-                tr_id = "VTTT1002U" if side == "buy" else "VTTT1002U"
+                tr_id = "VTTT1002U" if side == "buy" else "VTTT1001U"
             elif self.exchange == '도쿄':
                 tr_id = "VTTS0308U" if side == "buy" else "VTTS0307U"
             elif self.exchange == '상해':
@@ -1470,7 +1471,7 @@ class KoreaInvestment:
 
         if start_day == "":
             start_day = "19800104"
-
+        
         params = {
             "FID_COND_MRKT_DIV_CODE": "J",
             "FID_INPUT_ISCD": symbol,
@@ -1479,8 +1480,43 @@ class KoreaInvestment:
             "FID_PERIOD_DIV_CODE": timeframe,
             "FID_ORG_ADJ_PRC": 0 if adj_price else 1
         }
-        resp = requests.get(url, headers=headers, params=params)
-        return resp.json()
+        resp_1 = requests.get(url, headers=headers, params=params).json()
+        df = pd.DataFrame(resp_1['output2'])
+
+        check_done = False
+        before_min = end_day
+
+        while not check_done:
+            # check start day and response, if not match, retry from start day to current min day
+            current_min = df['stck_bsop_date'].min().replace('-', '')
+
+            if start_day != current_min:
+                params["FID_INPUT_DATE_2"] = current_min
+                resp = requests.get(url, headers=headers, params=params).json()
+                
+                if resp['rt_cd'] == '1':
+                    time.sleep(0.2)
+                    continue
+                df2 = pd.DataFrame(resp['output2'])
+
+                # if empty dataframe, break
+                if df2.empty:
+                    check_done = True
+                    break
+                else:
+                    resp_1['output2'].extend(resp['output2'])
+                    df = pd.concat([df, df2], axis=0)
+            else:
+                check_done = True
+                break
+            
+            if before_min == current_min:
+                check_done = True
+                break
+            else:
+                before_min = current_min
+
+        return resp_1
 
     def fetch_ohlcv_overesea(self, symbol: str, timeframe:str='D',
                              end_day:str="", adj_price:bool=True):
