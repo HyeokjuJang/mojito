@@ -1480,14 +1480,21 @@ class KoreaInvestment:
             "FID_PERIOD_DIV_CODE": timeframe,
             "FID_ORG_ADJ_PRC": 0 if adj_price else 1
         }
-        resp_1 = requests.get(url, headers=headers, params=params).json()
-        df = pd.DataFrame(resp_1['output2'])
+
+        try:
+            resp_1 = requests.get(url, headers=headers, params=params).json()
+            df = pd.DataFrame(resp_1['output2'])
+        except:
+            time.sleep(1)
+            resp_1 = requests.get(url, headers=headers, params=params).json()
+            df = pd.DataFrame(resp_1['output2'])
 
         check_done = False
         before_min = end_day
 
         while not check_done:
             # check start day and response, if not match, retry from start day to current min day
+            df = df.dropna()
             current_min = df['stck_bsop_date'].min().replace('-', '')
 
             if start_day != current_min:
