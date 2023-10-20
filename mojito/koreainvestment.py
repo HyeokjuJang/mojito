@@ -993,9 +993,15 @@ class KoreaInvestment:
             data['tr_cont'] = res.headers['tr_cont']
         except:
             time.sleep(1)
-            res = requests.get(url, headers=headers, params=params)
-            data = res.json()
-            data['tr_cont'] = res.headers['tr_cont']
+            try:
+                res = requests.get(url, headers=headers, params=params)
+                data = res.json()
+                data['tr_cont'] = res.headers['tr_cont']
+            except:
+                time.sleep(1)
+                res = requests.get(url, headers=headers, params=params)
+                data = res.json()
+                data['tr_cont'] = res.headers['tr_cont']
         return data
 
     def fetch_present_balance(self, foreign_currency: bool=True) -> dict:
