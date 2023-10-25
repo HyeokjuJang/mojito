@@ -496,7 +496,16 @@ class KoreaInvestment:
             "fid_input_iscd": symbol
         }
         resp = requests.get(url, headers=headers, params=params)
-        return resp.json()
+        result = resp.json()
+
+        # do not return if there is an error
+        while result['rt_cd'] == '1':
+            # sleep for 0.1 seconds
+            time.sleep(0.2)
+            res = requests.get(url, headers=headers, params=params)
+            result = res.json()
+
+        return result
 
     def fetch_oversea_price(self, symbol: str) -> dict:
         """해외주식현재가/해외주식 현재체결가
