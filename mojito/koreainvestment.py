@@ -547,11 +547,12 @@ class KoreaInvestment:
         output = self._fetch_today_1m_ohlcv(symbol, to)
         output2 = output['output2']
         last_hour = output2[-1]['stck_cntg_hour']
+        last_date = output2[-1]['stck_bsop_date']
 
         result['output1'] = output['output1']
         result['output2'] = output2
 
-        while last_hour > "090100":
+        while last_hour > "090100" and last_date == now.strftime("%Y%m%d"):
             # last minute
             dt1 = datetime.datetime(
                 year=now.year,
@@ -568,9 +569,10 @@ class KoreaInvestment:
 
             # request 1minute ohlcv
             output = self._fetch_today_1m_ohlcv(symbol, to)
-            
+
             output2 = output['output2']
             last_hour = output2[-1]['stck_cntg_hour']
+            last_date = output2[-1]['stck_bsop_date']
 
             result['output2'].extend(output2)
 
