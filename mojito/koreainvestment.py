@@ -550,18 +550,19 @@ class KoreaInvestment:
             to = now.strftime("%H%M%S")
 
             # kospi market end time
-            if to > "153000":
+            if to > "153000" or to < "090000":
                 to = "153000"
 
         output = self._fetch_today_1m_ohlcv(symbol, to)
         output2 = output['output2']
         last_hour = output2[-1]['stck_cntg_hour']
         last_date = output2[-1]['stck_bsop_date']
+        first_date = output2[0]['stck_bsop_date']
 
         result['output1'] = output['output1']
         result['output2'] = output2
 
-        while last_hour > "090100" and last_date == now.strftime("%Y%m%d"):
+        while last_hour > "090100" or last_hour > "150000" and last_date != first_date:
             # last minute
             dt1 = datetime.datetime(
                 year=now.year,
