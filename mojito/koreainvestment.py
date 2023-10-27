@@ -562,7 +562,7 @@ class KoreaInvestment:
         result['output1'] = output['output1']
         result['output2'] = output2
 
-        while last_hour > "090100" or last_hour > "150000" and last_date != first_date:
+        while last_hour > "090100":
             # last minute
             dt1 = datetime.datetime(
                 year=now.year,
@@ -585,7 +585,8 @@ class KoreaInvestment:
             last_date = output2[-1]['stck_bsop_date']
 
             result['output2'].extend(output2)
-
+            if last_hour > "150000" and last_date != first_date:
+                break
         return result
 
     def _fetch_today_1m_ohlcv(self, symbol: str, to: str):
